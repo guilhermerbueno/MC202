@@ -1,0 +1,148 @@
+/*
+ * NOME: GUILHERME RODRIGUES BUENO
+ * RA: 146318
+ * MC202 - 2Âº Semestre de 2013
+ * LABORATORIO 5 - Problema da Mochila
+ */
+
+#include<stdio.h>
+#include<stdlib.h>
+
+//definicao da estrutura que representa um item a ser levado na mochila
+struct item
+{
+    int id;
+    float peso;
+    float valor;
+    int quantidade;
+};
+typedef struct item Item;
+
+//Funcao responsavel por pegar dois vetores, vetor1 com tamanho n1 e vetor2 com tamanho n2,
+//e mescla-los de forma que fiquem ordenados em ordem decrescente 
+//sendo levado em consideracao a razao peso/valor do item comparado.
+//Ao final a funcao retorna um vetor ordenado resultante da mescla dos dois iniciais
+Item *intercalacao(Item *vetor1, int n1, Item *vetor2, int n2)
+{
+    //vetor auxiliar para armazenar a ordenacao
+    Item *vetorTemp = (Item*)malloc((n1 + n2)*sizeof(Item));
+    int aux1 = 0, aux2 = 0, auxTemp = 0;
+    
+    //verificando se nao chegou ao fim de um dos vetores passados
+    //por parametros e que devem ser mesclados
+    while((aux1 < n1) && (aux2 < n2))
+    {
+        //verifica qual vetor possui o maior item para ser armazenado no vetor ordenado
+        if(vetor1[aux1].valor/vetor1[aux1].peso < vetor2[aux2].valor/vetor2[aux2].peso)
+        {
+            vetorTemp[auxTemp] = vetor2[aux2];
+            aux2++;
+        }
+        else if(vetor1[aux1].valor/vetor1[aux1].peso > vetor2[aux2].valor/vetor2[aux2].peso)
+        {
+            vetorTemp[auxTemp] = vetor1[aux1];
+            aux1++;
+        }
+        auxTemp++;
+    }
+    
+    //caso, apos a comparacao inicial entre item por item dos dois vetores recebidos por parametros,
+    //ainda exista itens no vetor1, eles estarao ordenados e devem ser passados para o vetorTemp
+    while(aux1 < n1)
+    {
+        vetorTemp[auxTemp] = vetor1[aux1];
+        auxTemp++;
+        aux1++;
+    }
+    
+    //caso, apos a comparacao inicial entre item por item dos dois vetores recebidos por parametros,
+    //ainda exista itens no vetor2, eles estarao ordenados e devem ser passados para o vetorTemp
+    while(aux2 < n2)
+    {
+        vetorTemp[auxTemp] = vetor2[aux2];
+        auxTemp++;
+        aux2++;
+    }
+    
+    
+    return vetorTemp;
+}
+
+//funcao recursiva responsavel por desmembrar o vetor inicial('lido do teclado') a
+//fim deixa-lo mais simples para ordenar(merge sort)
+Item *ordenaVetorPesoValor(Item *itens, int maxItens)
+{
+    Item *vetor1, *vetor2;
+    
+    if(maxItens > 1)
+    {
+        vetor1 = ordenaVetorPesoValor(itens, maxItens/2);
+        vetor2 = ordenaVetorPesoValor(&itens[maxItens/2], maxItens-(maxItens/2));
+        return intercalacao(vetor1, maxItens/2, vetor2, maxItens-(maxItens/2));
+    }
+    
+    return itens;
+}
+
+//Metodo que ira selecionar apartir do vetor ordenado decrescentemente,
+//em razao de peso/valor, quais os itens que devem ser incluidos na mochila
+//a fim de maximizar o valor carregado pela mesma e ira printar o resultado na tela
+void armazenaNaMochila(Item *itens, int maxItens, float pesoMax)
+{
+    int aux, qtdd;
+    float pesoRestante = pesoMax;
+    float valorTotal = 0.0;
+    
+    //percorre o vetor ordenado
+    for(aux = 0; aux < maxItens; aux++)
+    {
+        qtdd = itens[aux].quantidade;
+        
+        while(qtdd != 0)
+        {
+            //caso todas as unidades de um determinado item possam ser incluidos na mochila,
+            //verifica se uma quantidade menor do mesmo pode ser incluida
+            if(qtdd*itens[aux].peso <= pesoRestante)
+            {
+                pesoRestante -= itens[aux].peso*qtdd;
+                printf("Item: %d Quantidade: %d\n", itens[aux].id, qtdd);
+                valorTotal += itens[aux].valor*qtdd;
+                break;
+            }
+            else
+            {
+                qtdd--;
+            }
+        }
+    }
+    
+    printf("Valor Total: %.2f\n", valorTotal);
+}
+
+int main()
+{
+    int maxItens = 0, aux;
+    float pesoMax = 0.0;
+    Item *itens;
+    
+    //le os valores de itens que serao passados e o peso maximo suportado pela mochila
+    scanf("%d", &maxItens);
+    scanf("%f", &pesoMax);
+    
+    itens = (Item*)malloc(maxItens*sizeof(Item));
+    
+    //le todos os itens e armazena no vetor
+    for(aux = 0; aux < maxItens; aux++)
+    {
+        scanf("%d", &itens[aux].id);
+        scanf("%f", &itens[aux].peso);
+        scanf("%f", &itens[aux].valor);
+        scanf("%d", &itens[aux].quantidade);
+    }
+    
+    armazenaNaMochila(ordenaVetorPesoValor(itens, maxItens), maxItens, pesoMax);
+    
+    free(itens);
+    
+    return 0;
+}
